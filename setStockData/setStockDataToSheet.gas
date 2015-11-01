@@ -1,0 +1,107 @@
+(function(global){
+  var SetStockDataToSheet = (function() {
+
+    function SetStockDataToSheet(config) {
+      this.spreadsheet = SpreadsheetApp.openById(config.spreadsheet_id);
+      this.sheet = this.spreadsheet.getSheetByName(config.sheet_name);
+      this.column = {
+        code: config.column.code,
+        price: config.column.price,
+        dividend: config.column.dividend,
+        name: config.column.name,
+        unit: config.column.unit,
+
+      }
+      this.skipCheckColumn = {
+        etf: config.column.etf,
+      }
+      this.GetStockDataLib = null;
+      this.row = null;
+      this.init();
+    }
+      
+    SetStockDataToSheet.prototype.init = function() {
+      for (var key in this.column) {
+        if (typeof this.column[key] != "number") {
+          this['set' + key.charAt(0).toUpperCase() + key.slice(1)] = function() {return;}
+        }
+      }
+      for (var key in this.skipCheckColumn) {
+        if (typeof this.skipCheckColumn[key] != "number") {
+          this['check' + key.charAt(0).toUpperCase() + key.slice(1)] = function() {return false;}
+        }
+      }
+    }
+    
+    SetStockDataToSheet.prototype.setData = function() {
+      var lastRow = this.sheet.getLastRow();
+      for(this.row = 2;this.row <= lastRow; this.row++) {
+        this.GetStockDataLib = GetStockData.factory({code:this.__getCodeNum()});
+        if(this.checkEtf()) continue;  
+        this.setUnit();
+        this.setName();
+        this.setDividend();
+        this.setPrice();
+      }
+    }
+    
+    SetStockDataToSheet.prototype.checkEtf = function() { 
+      var val = this.sheet.getRange(this.row, this.skipCheckColumn.etf).getValue();
+      return val == 'ETF' ? true : false;
+    }
+    
+    SetStockDataToSheet.prototype.__getCodeNum = function() {
+      return this.sheet.getRange(this.row, this.column.code).getValue();
+    }
+    
+    SetStockDataToSheet.prototype.setPrice = function() {
+      this.sheet.getRange(this.row, this.column.price).setValue(this.GetStockDataLib.getPrice());
+    }
+    
+    SetStockDataToSheet.prototype.setDividend = function() {
+      this.sheet.getRange(this.row, this.column.dividend).setValue(this.GetStockDataLib.getDividend());
+    }
+    SetStockDataToSheet.prototype.setUnit = function() {
+      this.sheet.getRange(this.row, this.column.unit).setValue(this.GetStockDataLib.getUnit());
+    }
+    
+    SetStockDataToSheet.prototype.setName = function() {
+      this.sheet.getRange(this.row, this.column.name).setValue(this.GetStockDataLib.getName());
+    }
+
+
+    
+    return SetStockDataToSheet;
+  })();
+
+  global.SetStockDataToSheet = SetStockDataToSheet;
+
+})(this);
+
+/**
+ * SetStockDataToSheetの作成
+ *
+ * <h3>利用例</h3>
+ * <pre>
+ * var SetStockDataToSheet = SetStockDataToSheet.factory(
+ * {spreadsheet_id: '17f9oxuWIUJn4AzKnf6EMveDNpR3OPxjQbuV_gZ_WYFI',
+ *    sheet_name: 'stock',
+ *    column: {
+ *      code: 1,
+ *      price: 5,
+ *      dividend: 9,
+ *      name: 2,
+ *    });
+ * </pre>
+ * @param {assoc} config
+ */
+function factory(config) {
+  return new SetStockDataToSheet(config);
+}
+
+/**
+ * 補完用のダミー
+ */
+function setData() {
+  throw new Error('SetStockDataToSheetを呼び出してから呼び出してください。');
+}
