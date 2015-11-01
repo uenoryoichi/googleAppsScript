@@ -90,7 +90,7 @@
  *
  * <h3>利用例</h3>
  * <pre>
- * var GetStockData = GetStockData.factory({code: 3900});
+ * var StockData = GetStockData.factory({code: 7203});
  * </pre>
  * @param {assoc} config
  */
