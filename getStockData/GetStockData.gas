@@ -1,0 +1,120 @@
+(function(global){
+  var GetStockData = (function() {
+
+    function GetStockData(config) {
+      this.code = config.code;
+      this.response = this.__getFetchResponse();
+    }
+   
+    /**
+     * URLを取得する
+     */
+    GetStockData.prototype.__getFetchResponse = function() {
+      return UrlFetchApp.fetch('http://stocks.finance.yahoo.co.jp/stocks/detail/?code='+this.code);
+    }
+    
+    /**
+     * 存在する銘柄か否かを返す
+     */
+    GetStockData.prototype.checkUndefind = function() {
+      var myRegexp = /<div class=\"selectFinTitle yjL\"> 一致する銘柄は見つかりませんでした<\/div>/i;
+      var match = myRegexp.exec(this.response.getContentText());
+      
+      if (match == null || match == undefined) return false;
+      return true;  
+    }
+    
+    /**
+     * 現在の価格を返す
+     */
+    GetStockData.prototype.getPrice = function() {
+      var myRegexp = /<td class=\"stoksPrice\">([\s\S]*?)<\/td>/i;
+      var match = myRegexp.exec(this.response.getContentText());
+      if (match == null || match == undefined || match[1] == null || match[1] == 'undefined' || match[1] == '---') return 0;
+     
+      return match[1].replace(/(^\s+)|(\s+$)/g, "");
+    }
+    
+    /**
+     * 予想配当を返す
+     */
+    GetStockData.prototype.getDividend = function() {
+      var myRegexp = /id=\"haitourimawari([\s\S]*?)id=\"hitokabuhaitou\"/i;
+      var match = myRegexp.exec(this.response.getContentText());
+      
+      if (match == null || match == undefined || match[0] == null || match[0] == 'undefined' || match[0] == '---') return 0;
+      match = match[0].match(/strong>([\s\S]*?)<\/strong/i);
+      
+      if (match == null || match == undefined || match[0] == null || match[0] == 'undefined' || match[0] == '---') return 0;
+      match = match[0].match(/\">([\s\S]*?)<\/a/i);
+      
+      if (match == null || match == undefined || match[1] == null || match[1] == 'undefined' || match[1] == '---') return 0;
+      
+      return match[1];
+    }
+    
+    /**
+     * 取引単位を返す
+     */
+    GetStockData.prototype.getUnit = function() {
+      var myRegexp = /dd class=\"ymuiEditLink mar0\"><strong>([\d,]*?)<\/strong>株<\/dd>/i;
+      var match = myRegexp.exec(this.response.getContentText());
+      if (match == null || match == undefined || match[0] == null || match[0] == 'undefined' || match[0] == '---') return 0;
+      match = match[0].match(/strong>([\d,]*?)<\/strong/i);
+      if (match == null || match == undefined || match[1] == null || match[1] == 'undefined' || match[1] == '---') return 0;
+      
+      return match[1];
+    }
+    
+    /**
+     * 会社名称を返す
+     */
+    GetStockData.prototype.getName = function() {
+      var myRegexp = /h1>([\s\S]*?)<\/h1>/i;
+      var match = myRegexp.exec(this.response.getContentText());
+      match = match[0].match(/h1>([\s\S]*?)<\/h1/i);
+      if (match == null || match == undefined || match[1] == null || match[1] == 'undefined' || match[1] == '---') return 0;
+      
+      return match[1];
+    }
+    
+    return GetStockData;
+  })();
+
+  global.GetStockData = GetStockData;
+
+})(this);
+
+/**
+ * GetStockDataの作成
+ *
+ * <h3>利用例</h3>
+ * <pre>
+ * var GetStockData = GetStockData.factory({code: 3900});
+ * </pre>
+ * @param {assoc} config
+ */
+function factory(config) {
+  return new GetStockData(config);
+}
+
+/**
+ * 補完用のダミー
+ */
+function getName() {
+  throw new Error('GetStockDataを呼び出してから呼び出してください。');
+}
+function checkUndefind() {
+  throw new Error('GetStockDataを呼び出してから呼び出してください。');
+}
+function getPrice() {
+  throw new Error('GetStockDataを呼び出してから呼び出してください。');  
+}
+function getDividend() {
+  throw new Error('GetStockDataを呼び出してから呼び出してください。');  
+}
+function getUnit() {
+  throw new Error('GetStockDataを呼び出してから呼び出してください。');  
+}
+
+
