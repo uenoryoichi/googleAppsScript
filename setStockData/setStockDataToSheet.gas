@@ -10,16 +10,18 @@
         dividend: config.column.dividend,
         name: config.column.name,
         unit: config.column.unit,
-
+        marketCapitalization : config.column.marketCapitalization,
       }
       this.skipCheckColumn = {
         etf: config.column.etf,
       }
       this.GetStockDataLib = null;
       this.row = null;
+      this.startRow = config.offset;
+      this.delOpt = config.delOpt;
       this.init();
     }
-      
+
     SetStockDataToSheet.prototype.init = function() {
       for (var key in this.column) {
         if (typeof this.column[key] != "number") {
@@ -31,46 +33,55 @@
           this['check' + key.charAt(0).toUpperCase() + key.slice(1)] = function() {return false;}
         }
       }
+      if (typeof this.startRow != "number") { this.startRow = 2; }
     }
-    
+
     SetStockDataToSheet.prototype.setData = function() {
       var lastRow = this.sheet.getLastRow();
-      for(this.row = 2;this.row <= lastRow; this.row++) {
+      for(this.row = this.startRow;this.row <= lastRow; this.row++) {
         this.GetStockDataLib = GetStockData.factory({code:this.__getCodeNum()});
-        if(this.checkEtf()) continue;  
+        if (this.checkEtf()) continue;
+        if (this.delOpt == true && this.GetStockDataLib.checkUndefind()) {
+          this.sheet.deleteRow(this.row);
+          this.row--;
+          continue;
+        }
         this.setUnit();
         this.setName();
         this.setDividend();
         this.setPrice();
+        this.setMarketCapitalization();
       }
     }
-    
-    SetStockDataToSheet.prototype.checkEtf = function() { 
+
+    SetStockDataToSheet.prototype.checkEtf = function() {
       var val = this.sheet.getRange(this.row, this.skipCheckColumn.etf).getValue();
       return val == 'ETF' ? true : false;
     }
-    
+
     SetStockDataToSheet.prototype.__getCodeNum = function() {
       return this.sheet.getRange(this.row, this.column.code).getValue();
     }
-    
+
     SetStockDataToSheet.prototype.setPrice = function() {
       this.sheet.getRange(this.row, this.column.price).setValue(this.GetStockDataLib.getPrice());
     }
-    
+
+    SetStockDataToSheet.prototype.setMarketCapitalization = function() {
+      this.sheet.getRange(this.row, this.column.marketCapitalization).setValue(this.GetStockDataLib.getMarketCapitalization());
+    }
+
     SetStockDataToSheet.prototype.setDividend = function() {
       this.sheet.getRange(this.row, this.column.dividend).setValue(this.GetStockDataLib.getDividend());
     }
     SetStockDataToSheet.prototype.setUnit = function() {
       this.sheet.getRange(this.row, this.column.unit).setValue(this.GetStockDataLib.getUnit());
     }
-    
+
     SetStockDataToSheet.prototype.setName = function() {
       this.sheet.getRange(this.row, this.column.name).setValue(this.GetStockDataLib.getName());
     }
 
-
-    
     return SetStockDataToSheet;
   })();
 
