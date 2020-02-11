@@ -1,3 +1,8 @@
+/**
+ * https://github.com/uenoryoichi/googleAppsScript/tree/master/setStockData
+ * https://script.google.com/d/1txiy3VU6rZooyyNmW6-TX7ExmNBJW4TB8nNlOBaCIMyC4_t_fWZ7azft/edit
+ */
+
 (function(global){
   var SetStockDataToSheet = (function() {
 
